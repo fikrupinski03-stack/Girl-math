@@ -1,0 +1,2100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Girl Math</title>
+
+<style>
+  :root{
+    --bg:#f4d7e2;
+    --text:#2b1e2a;
+    --muted:#6f5c6c;
+    --accent:#df5a9a;
+    --outline:rgba(255,255,255,.26);
+    --shadow:0 18px 42px rgba(0,0,0,.12);
+    --widgetShadow: 0 20px 60px rgba(0,0,0,.16);
+    --glass: rgba(255,255,255,.60);
+    --font: ui-rounded, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --dim: 0.90; /* background brightness 0.70..1.00 */
+  }
+
+  [data-theme="forest"]{
+    --bg:#2b3a30;
+    --text:#f1fff7;
+    --muted: rgba(241,255,247,.78);
+    --accent:#7be0a8;
+    --outline: rgba(255,255,255,.18);
+    --shadow:0 18px 46px rgba(0,0,0,.35);
+    --widgetShadow: 0 26px 80px rgba(0,0,0,.35);
+    --glass: rgba(22,44,33,.58);
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    height:100vh;
+    overflow:hidden;
+    font-family:var(--font);
+    color:var(--text);
+    position:relative;
+  }
+
+  /* Background layer only */
+  #bg{
+    position:fixed;
+    inset:0;
+    z-index:-2;
+    filter: brightness(var(--dim));
+  }
+  #bg[data-wallpaper="cherries"]{
+    background:
+      radial-gradient(circle at 10% 15%, rgba(255,255,255,.25), transparent 38%),
+      radial-gradient(circle at 80% 25%, rgba(255,255,255,.16), transparent 40%),
+      radial-gradient(circle at 12px 18px, rgba(255,90,150,.22) 0 4px, transparent 5px),
+      radial-gradient(circle at 22px 26px, rgba(255,90,150,.16) 0 3px, transparent 4px),
+      radial-gradient(circle at 16px 20px, rgba(255,255,255,.18) 0 1px, transparent 2px),
+      var(--bg);
+    background-size: auto, auto, 68px 68px, 68px 68px, 68px 68px, auto;
+  }
+  #bg[data-wallpaper="bows"]{
+    background:
+      radial-gradient(circle at 15% 20%, rgba(255,255,255,.26), transparent 48%),
+      radial-gradient(circle at 85% 70%, rgba(255,255,255,.16), transparent 52%),
+      repeating-linear-gradient(135deg,
+        rgba(255,170,210,.12) 0 10px,
+        rgba(255,170,210,.04) 10px 30px),
+      var(--bg);
+  }
+  #bg[data-wallpaper="sage"]{
+    background:
+      linear-gradient(135deg, rgba(255,255,255,.20), rgba(255,255,255,.04)),
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,.12), transparent 52%),
+      var(--bg);
+  }
+  #bg[data-wallpaper="grid"]{
+    background:
+      linear-gradient(0deg, rgba(255,255,255,.06), rgba(255,255,255,.06)),
+      linear-gradient(transparent 24px, rgba(255,255,255,.14) 25px),
+      linear-gradient(90deg, transparent 24px, rgba(255,255,255,.14) 25px),
+      var(--bg);
+    background-size: auto, 25px 25px, 25px 25px, auto;
+  }
+
+  /* Confetti canvas */
+  #fx{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index: 1200;
+  }
+
+  /* Top bar */
+  .topbar{
+    position:fixed;
+    top:16px;
+    left:50%;
+    transform:translateX(-50%);
+    width:calc(100% - 32px);
+    max-width:1280px;
+    background:var(--glass);
+    backdrop-filter:blur(14px);
+    border-radius:22px;
+    box-shadow:var(--shadow);
+    border:1px solid var(--outline);
+    padding:12px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    z-index:100;
+  }
+  .brand{ display:flex; flex-direction:column; gap:2px; min-width: 170px; }
+  .brand .t{ font-weight:1000; font-size:20px; letter-spacing:-.5px; }
+  .brand .s{ font-size:12px; color:var(--muted); }
+
+  .modes{
+    display:flex; gap:6px;
+    border:1px solid var(--outline);
+    border-radius:16px;
+    background: rgba(255,255,255,.10);
+    overflow:hidden;
+  }
+  .modes button{
+    border:none; background:transparent;
+    padding:10px 12px;
+    font-weight:900;
+    color:var(--text);
+    cursor:pointer;
+  }
+  .modes button.active{ background: rgba(0,0,0,.08); }
+
+  .controls{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  .field{
+    display:flex; flex-direction:column; gap:4px;
+    padding:6px 10px;
+    border-radius:16px;
+    border:1px solid var(--outline);
+    background: rgba(255,255,255,.10);
+  }
+  .field label{ font-size:11px; color:var(--muted); line-height:1; }
+  .field input{
+    width:92px;
+    padding:8px 10px;
+    border-radius:14px;
+    border:1px solid var(--outline);
+    background: rgba(255,255,255,.18);
+    color:var(--text);
+    outline:none;
+    font-size:14px;
+  }
+
+  .sliderRow{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 10px;
+    border-radius:16px;
+    border:1px solid var(--outline);
+    background: rgba(255,255,255,.10);
+  }
+  .sliderRow .lbl{
+    font-size:12px;
+    font-weight:950;
+    color:var(--muted);
+    white-space:nowrap;
+  }
+  .sliderRow input[type="range"]{ width:140px; }
+
+  button{
+    border:none;
+    padding:10px 14px;
+    border-radius:16px;
+    font-weight:950;
+    cursor:pointer;
+    background:var(--accent);
+    color:#101010;
+    box-shadow: 0 10px 24px rgba(0,0,0,.12);
+    white-space:nowrap;
+  }
+  button.secondary{
+    background: rgba(255,255,255,.16);
+    color: var(--text);
+    border:1px solid var(--outline);
+    box-shadow:none;
+  }
+  button:disabled{ opacity:.55; cursor:not-allowed; }
+
+  select{
+    padding:10px 12px;
+    border-radius:16px;
+    border:1px solid var(--outline);
+    background: rgba(255,255,255,.16);
+    color: var(--text);
+    font-weight:900;
+    outline:none;
+  }
+
+  /* Center counter */
+  .center{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    pointer-events:none;
+    z-index:60;
+  }
+  .counter{
+    width:min(720px, calc(100% - 28px));
+    background:var(--glass);
+    backdrop-filter:blur(18px);
+    border:1px solid var(--outline);
+    border-radius:34px;
+    box-shadow:var(--shadow);
+    padding:32px 36px;
+    text-align:center;
+    pointer-events:auto;
+  }
+  .counter .title{
+    font-size:14px;
+    font-weight:900;
+    color:var(--muted);
+    letter-spacing:.3px;
+    text-transform:uppercase;
+  }
+  .counter .money{
+    font-size:72px;
+    font-weight:1000;
+    letter-spacing:-1.2px;
+    margin:10px 0 0;
+    line-height:1.05;
+  }
+
+  /* Board */
+  .board{ position:absolute; inset:0; z-index:20; }
+
+  .item{
+    position:absolute;
+    touch-action:none;
+    user-select:none;
+    transform-origin:center center;
+  }
+
+  .frame{
+    position:relative;
+    width:100%;
+    height:100%;
+    border-radius:22px;
+    box-shadow:var(--widgetShadow);
+    border:1px solid rgba(255,255,255,.20);
+    overflow:hidden;
+    background: rgba(255,255,255,.06);
+  }
+  .frame img{
+    display:block;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    pointer-events:none;
+  }
+
+  .handle{
+    position:absolute;
+    width:14px; height:14px;
+    border-radius:999px;
+    border:2px solid rgba(255,255,255,.85);
+    background: rgba(0,0,0,.20);
+    box-shadow: 0 8px 18px rgba(0,0,0,.16);
+    z-index:5;
+  }
+  .handle.resize{ right:10px; bottom:10px; cursor:nwse-resize; }
+  .handle.rotate{ right:10px; top:10px; cursor:grab; }
+
+  .xbtn{
+    position:absolute;
+    left:10px; top:10px;
+    width:30px; height:30px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.26);
+    background: rgba(0,0,0,.32);
+    color:#fff;
+    font-weight:1000;
+    cursor:pointer;
+    z-index:6;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    user-select:none;
+  }
+
+  /* Widgets */
+  .widget{
+    border-radius: 26px;
+    background: var(--glass);
+    color: var(--text);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255,255,255,.18);
+    box-shadow: var(--widgetShadow);
+    padding: 12px;
+    overflow:hidden;
+  }
+
+  .whead{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px;
+    padding: 10px 12px;
+    border-radius: 18px;
+    border:1px solid rgba(255,255,255,.16);
+    background: rgba(255,255,255,.08);
+    cursor: grab;
+    user-select:none;
+  }
+  .wtitle{ font-weight:1000; letter-spacing:-.2px; }
+  .wbtn{
+    border:none;
+    background: rgba(255,255,255,.10);
+    color: inherit;
+    border:1px solid rgba(255,255,255,.16);
+    border-radius: 14px;
+    padding: 7px 10px;
+    font-weight:1000;
+    cursor:pointer;
+    box-shadow:none;
+  }
+  .wbody{ padding: 12px 8px 8px; }
+
+  .winput, textarea{
+    width:100%;
+    padding:11px 12px;
+    border-radius: 16px;
+    border:1px solid rgba(255,255,255,.16);
+    background: rgba(255,255,255,.10);
+    color: var(--text);
+    outline:none;
+    font-weight:750;
+    font-family: var(--font);
+  }
+  textarea{ min-height: 150px; resize: vertical; }
+
+  .list{
+    display:flex; flex-direction:column; gap:10px;
+    max-height: 260px;
+    overflow:auto;
+    padding-right:4px;
+  }
+  .todo{
+    display:flex; align-items:center; gap:10px;
+    padding:12px 12px;
+    border-radius: 18px;
+    border:1px solid rgba(255,255,255,.16);
+    background: rgba(255,255,255,.08);
+  }
+  .todo .txt{ flex:1; font-weight:850; }
+  .todo.done .txt{ opacity:.65; text-decoration: line-through; }
+
+  /* Milestone popup */
+  .milestone{
+    position:fixed;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,.35);
+    backdrop-filter:blur(6px);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+    z-index:1100;
+  }
+  .milestone.show{ opacity:1; pointer-events:auto; }
+  .milestone .bubble{
+    width:min(92vw, 620px);
+    background:var(--glass);
+    border:1px solid var(--outline);
+    border-radius:34px;
+    box-shadow: 0 34px 120px rgba(0,0,0,.26);
+    padding:30px 30px 26px;
+    text-align:center;
+    animation:pop .35s ease;
+    position:relative;
+  }
+  .milestone .close{
+    position:absolute;
+    right:14px;
+    top:14px;
+    width:38px;
+    height:38px;
+    border-radius:999px;
+    border:1px solid var(--outline);
+    background:rgba(255,255,255,.10);
+    cursor:pointer;
+    font-weight:1000;
+    color:var(--text);
+  }
+  .milestone .kicker{
+    font-weight:1000;
+    letter-spacing:.4px;
+    font-size:12px;
+    color:var(--muted);
+    text-transform:uppercase;
+  }
+  .milestone .title{
+    font-weight:1000;
+    letter-spacing:-.6px;
+    font-size:30px;
+    margin:12px 0 8px;
+  }
+  .milestone .msg{
+    font-weight:900;
+    color:var(--muted);
+    line-height:1.35;
+    font-size:16px;
+  }
+  .milestone .emojiRow{
+    margin-top:16px;
+    font-size:26px;
+  }
+  @keyframes pop{
+    0%{ transform:scale(.86); opacity:0; }
+    100%{ transform:scale(1); opacity:1; }
+  }
+
+  /* Toast */
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:18px;
+    transform:translateX(-50%);
+    background: rgba(0,0,0,.62);
+    color:#fff;
+    padding:10px 14px;
+    border-radius:16px;
+    font-weight:900;
+    z-index:2000;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+  }
+  .toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(-6px);
+  }
+</style>
+</head>
+
+<body data-theme="pink">
+<div id="bg" data-wallpaper="cherries"></div>
+<canvas id="fx"></canvas>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="t">Girl Math</div>
+    <div class="s" id="modeLabel">Slay Queen mode</div>
+  </div>
+
+  <div class="modes" aria-label="mode">
+    <button id="mSlay" class="active" type="button">👑 Slay</button>
+    <button id="mChill" type="button">🌿 Chill</button>
+    <button id="mLock" type="button">🎯 Lock</button>
+  </div>
+
+  <div class="controls">
+    <select id="packSel" title="Design Pack">
+      <option value="pinkCherry">Pack: Pink Cherry 🍒</option>
+      <option value="pinkBow">Pack: Pink Bow 🎀</option>
+      <option value="sageGarden">Pack: Sage Garden 🌿</option>
+      <option value="forestMinimal">Pack: Forest Minimal 🌲</option>
+    </select>
+
+    <div class="sliderRow" title="Brightness">
+      <div class="lbl">Brightness</div>
+      <input id="bright" type="range" min="70" max="100" value="90" />
+    </div>
+
+    <div class="field">
+      <label>Hourly</label>
+      <input id="rate" type="number" step="0.01" value="17.00">
+    </div>
+    <div class="field">
+      <label>Shift (hrs)</label>
+      <input id="shift" type="number" step="0.25" value="8">
+    </div>
+
+    <button id="start" type="button">Start</button>
+    <button id="pause" class="secondary" type="button" disabled>Pause</button>
+    <button id="reset" class="secondary" type="button" disabled>Reset</button>
+    <button id="endDay" class="secondary" type="button">End day</button>
+
+
+    <input id="upload" type="file" accept="image/*" multiple style="display:none;">
+    <button id="addPics" class="secondary" type="button">Add pics</button>
+
+    <select id="widgetSel" title="Widget">
+      <option value="todo">To-Do</option>
+      <option value="countdown">Countdown</option>
+      <option value="notes">Notes</option>
+      <option value="payday">Payday</option>
+      <option value="budget">Girl Math Budget</option>
+
+    </select>
+
+    <button id="addWidget" class="secondary" type="button">Add widget</button>
+
+    <button id="saveLayout" class="secondary" type="button">Save layout</button>
+    <input id="loadInput" type="file" accept="application/json" style="display:none;">
+    <button id="loadLayout" class="secondary" type="button">Load layout</button>
+  </div>
+</div>
+
+<div class="center">
+  <div class="counter">
+    <div class="title">Money earned</div>
+    <div class="money" id="money">$0.00</div>
+  </div>
+</div>
+
+<div class="board" id="board"></div>
+
+<div class="milestone" id="milestone">
+  <div class="bubble" role="dialog" aria-modal="true">
+    <button class="close" id="msClose" aria-label="Close" type="button">✕</button>
+    <div class="kicker" id="msKicker">✨ Milestone unlocked ✨</div>
+    <div class="title" id="msTitle">$5 earned</div>
+    <div class="msg" id="msMsg">Slay queen…</div>
+    <div class="emojiRow" id="msEmoji">✨ 💖 ✨</div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Hi</div>
+
+<script>
+(() => {
+  const $ = (id)=>document.getElementById(id);
+  const uid = () => (crypto?.randomUUID ? crypto.randomUUID() : ("id_"+Math.random().toString(16).slice(2)));
+
+  const bg = $("bg");
+  const board = $("board");
+  const rateEl = $("rate");
+  const shiftEl = $("shift");
+  const brightEl = $("bright");
+  const startBtn = $("start");
+  const pauseBtn = $("pause");
+  const resetBtn = $("reset");
+  const moneyEl = $("money");
+  const uploadEl = $("upload");
+  const addPicsBtn = $("addPics");
+  const widgetSel = $("widgetSel");
+  const addWidgetBtn = $("addWidget");
+  const saveLayoutBtn = $("saveLayout");
+  const loadLayoutBtn = $("loadLayout");
+  const loadInput = $("loadInput");
+
+  const modeLabel = $("modeLabel");
+  const mSlay = $("mSlay"), mChill = $("mChill"), mLock = $("mLock");
+  const packSel = $("packSel");
+
+  const toast = $("toast");
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=>toast.classList.remove("show"), 1900);
+  }
+
+  // Safe storage fallback (work laptop friendly)
+  const memStore = {};
+  const safeStorage = {
+    get(key){
+      try { return localStorage.getItem(key); }
+      catch(e){ return memStore[key] ?? null; }
+    },
+    set(key, val){
+      try { localStorage.setItem(key, val); return true; }
+      catch(e){ memStore[key] = val; return false; }
+    }
+  };
+
+  // Milestone popup
+  const milestone = $("milestone");
+  const msClose = $("msClose");
+  const msKicker = $("msKicker");
+  const msTitle  = $("msTitle");
+  const msMsg    = $("msMsg");
+  const msEmoji  = $("msEmoji");
+
+  function showMilestone({kicker, title, msg, emojis}){
+    msKicker.textContent = kicker || "✨ Milestone unlocked ✨";
+    msTitle.textContent  = title  || "You did that";
+    msMsg.textContent    = msg    || "";
+    msEmoji.textContent  = (emojis && emojis.length) ? emojis.join(" ") : "✨ 💖 ✨";
+
+    milestone.classList.add("show");
+    clearTimeout(showMilestone._t);
+    showMilestone._t = setTimeout(()=>milestone.classList.remove("show"), 10000);
+  }
+  function hideMilestone(){
+    milestone.classList.remove("show");
+    clearTimeout(showMilestone._t);
+  }
+  msClose.onclick = (e)=>{ e.stopPropagation(); hideMilestone(); };
+  milestone.addEventListener("pointerdown",(e)=>{ if(e.target === milestone) hideMilestone(); });
+
+  // Confetti + emoji burst
+  const fx = $("fx");
+  const ctx = fx.getContext("2d");
+  const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  function resizeFX(){
+    fx.width = Math.floor(window.innerWidth * DPR);
+    fx.height = Math.floor(window.innerHeight * DPR);
+    fx.style.width = window.innerWidth + "px";
+    fx.style.height = window.innerHeight + "px";
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener("resize", resizeFX);
+  resizeFX();
+
+  const particles = [];
+  let fxRunning = false;
+  const rand = (a,b)=>a+Math.random()*(b-a);
+  const pick = (arr)=>arr[Math.floor(Math.random()*arr.length)];
+
+  function burstConfetti(emojis){
+    const cx = window.innerWidth/2;
+    const cy = window.innerHeight/2 + 40;
+    const accent = getComputedStyle(document.body).getPropertyValue("--accent").trim() || "#df5a9a";
+
+    for(let i=0;i<90;i++){
+      particles.push({
+        type:"paper",
+        x: cx + rand(-40,40),
+        y: cy + rand(-20,20),
+        vx: rand(-3.2,3.2),
+        vy: rand(-7.5,-3.2),
+        g: 0.18,
+        life: rand(55,95),
+        r: rand(0, Math.PI*2),
+        vr: rand(-0.25,0.25),
+        w: rand(4,8),
+        h: rand(6,12),
+        a: 1,
+        color: (Math.random()<0.5) ? accent : "rgba(255,255,255,.9)"
+      });
+    }
+
+    const eList = emojis && emojis.length ? emojis : ["✨","💖"];
+    for(let i=0;i<14;i++){
+      particles.push({
+        type:"emoji",
+        x: cx + rand(-30,30),
+        y: cy + rand(-10,20),
+        vx: rand(-2.2,2.2),
+        vy: rand(-6.2,-2.8),
+        g: 0.14,
+        life: rand(55,95),
+        a: 1,
+        emoji: pick(eList),
+        size: rand(18,26)
+      });
+    }
+
+    if(!fxRunning){
+      fxRunning = true;
+      requestAnimationFrame(fxTick);
+    }
+  }
+
+  function fxTick(){
+    ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+
+    for(let i=particles.length-1;i>=0;i--){
+      const p = particles[i];
+      p.vy += p.g;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life -= 1;
+      p.a = Math.max(0, Math.min(1, p.life/80));
+
+      if(p.type==="paper"){
+        p.r += p.vr;
+        ctx.save();
+        ctx.globalAlpha = p.a;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.r);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        ctx.restore();
+      } else {
+        ctx.save();
+        ctx.globalAlpha = p.a;
+        ctx.font = `${p.size}px ${getComputedStyle(document.body).fontFamily}`;
+        ctx.fillText(p.emoji, p.x, p.y);
+        ctx.restore();
+      }
+
+      if(p.life <= 0 || p.y > window.innerHeight + 60){
+        particles.splice(i,1);
+      }
+    }
+
+    if(particles.length){
+      requestAnimationFrame(fxTick);
+    } else {
+      fxRunning = false;
+      ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+    }
+  }
+
+  // State
+  const STORAGE_KEY = "girlmath_v080";
+  const state = {
+    version:"0.8.0",
+    mode:"slay",
+    pack:"pinkCherry",
+    rate:17,
+    shift:8,
+    dim:0.90,
+    items:[],   // photos
+    widgets:[], // widgets
+    milestoneRot:{} // per-amount rotation indexes
+  };
+
+  function saveState(){
+    state.rate = Number(rateEl.value)||0;
+    state.shift = Number(shiftEl.value)||0;
+    state.dim = Number(brightEl.value)/100;
+    safeStorage.set(STORAGE_KEY, JSON.stringify(state));
+  }
+  function loadState(){
+    const raw = safeStorage.get(STORAGE_KEY);
+    if(!raw) return;
+    try{
+      const parsed = JSON.parse(raw);
+      // only accept known fields
+      Object.assign(state, parsed);
+    }catch(e){}
+  }
+  loadState();
+
+  // Packs
+  const PACKS = {
+    pinkCherry: {
+      theme:"pink",
+      wallpaper:"cherries",
+      vars:{
+        "--bg":"#f4d7e2",
+        "--accent":"#df5a9a",
+        "--text":"#2b1e2a",
+        "--muted":"#6f5c6c",
+        "--glass":"rgba(255,255,255,.60)"
+      }
+    },
+    pinkBow: {
+      theme:"pink",
+      wallpaper:"bows",
+      vars:{
+        "--bg":"#f3dbe5",
+        "--accent":"#e06aa8",
+        "--text":"#2b1e2a",
+        "--muted":"#6f5c6c",
+        "--glass":"rgba(255,255,255,.60)"
+      }
+    },
+    sageGarden: {
+      theme:"pink",
+      wallpaper:"sage",
+      vars:{
+        "--bg":"#b8c7bb",
+        "--accent":"#2c6f52",
+        "--text":"#1c2621",
+        "--muted":"rgba(28,38,33,.72)",
+        "--glass":"rgba(255,255,255,.54)"
+      }
+    },
+    forestMinimal: {
+      theme:"forest",
+      wallpaper:"sage",
+      vars:{
+        "--bg":"#2b3a30",
+        "--accent":"#7be0a8",
+        "--text":"#f1fff7",
+        "--muted":"rgba(241,255,247,.78)",
+        "--glass":"rgba(22,44,33,.58)"
+      }
+    }
+  };
+
+  function applyPack(packKey){
+    const p = PACKS[packKey] || PACKS.pinkCherry;
+    state.pack = packKey;
+
+    document.body.setAttribute("data-theme", p.theme);
+    document.body.removeAttribute("style");
+    for(const [k,v] of Object.entries(p.vars || {})){
+      document.body.style.setProperty(k,v);
+    }
+    bg.setAttribute("data-wallpaper", p.wallpaper);
+
+    document.documentElement.style.setProperty("--dim", String(state.dim));
+    saveState();
+    rerender();
+  }
+
+  // Brightness
+  function applyBrightness(){
+    state.dim = Number(brightEl.value)/100;
+    document.documentElement.style.setProperty("--dim", String(state.dim));
+    saveState();
+  }
+  brightEl.addEventListener("input", applyBrightness);
+
+  // Modes + messages
+  function setMode(mode){
+    state.mode = mode;
+    for(const b of [mSlay,mChill,mLock]) b.classList.remove("active");
+    if(mode==="slay"){ mSlay.classList.add("active"); modeLabel.textContent="Slay Queen mode"; }
+    if(mode==="chill"){ mChill.classList.add("active"); modeLabel.textContent="Chill mode"; }
+    if(mode==="lock"){ mLock.classList.add("active"); modeLabel.textContent="Lock-in mode"; }
+    saveState();
+  }
+  mSlay.onclick=()=>setMode("slay");
+  mChill.onclick=()=>setMode("chill");
+  mLock.onclick=()=>setMode("lock");
+
+  // Earnings (no elapsed time shown)
+  function fmtMoney(n){
+    return n.toLocaleString(undefined,{style:"currency",currency:"USD"});
+  }
+
+  // Milestones (rotating rewards)
+  const MILESTONES = [
+    { amount: 5,  emojis:["☕","🧋","✨"], rewards:["Starbucks drink","Dutch Bros moment","Coffee + pastry","Little snack run"] },
+    { amount: 15, emojis:["🍓","🍪","✨"], rewards:["Sweet treat","Matcha moment","Dessert stop","Snack haul"] },
+    { amount: 30, emojis:["🍔","🍟","🥤"], rewards:["DoorDash lunch","Café lunch","Takeout moment","Sushi bowl"] },
+    { amount: 45, emojis:["🛍️","💄","✨"], rewards:["Target mini haul","Sephora mini","Amazon impulse buy","Cute candle"] },
+    { amount: 60, emojis:["🎀","🛒","✨"], rewards:["Amazon cart moment","Self-care restock","Aesthetic upgrade","Little splurge"] },
+    { amount: 80, emojis:["🎮","💎","✨"], rewards:["V-Bucks","UO coins","Game goodies","Entertainment fund"] },
+    { amount: 100,emojis:["💸","👑","✨"], rewards:["Savings deposit","Trip fund","Big goal progress","Bills handled"] },
+  ];
+  const fired = {};
+
+  const MESSAGE_POOLS = {
+    slay: [
+      (amt, reward) => `Slay queen — you just hit ${fmtMoney(amt)}. ${reward} is very reasonable.`,
+      (amt, reward) => `Be so fr… ${fmtMoney(amt)} already? ${reward} energy.`,
+      (amt, reward) => `${fmtMoney(amt)} earned. That’s literally ${reward}.`,
+      (amt, reward) => `Okayyy ${fmtMoney(amt)}. ${reward} moment.`,
+    ],
+    chill: [
+      (amt, reward) => `You’ve earned ${fmtMoney(amt)}. ${reward} is covered.`,
+      (amt, reward) => `${fmtMoney(amt)} in — nice steady progress.`,
+      (amt, reward) => `Good momentum. ${reward} level reached.`,
+      (amt, reward) => `You’re doing great. ${fmtMoney(amt)} earned.`,
+    ],
+    lock: [
+      (amt) => `${fmtMoney(amt)} reached.`,
+      (amt) => `${fmtMoney(amt)} earned.`,
+      (amt) => `Milestone: ${fmtMoney(amt)}.`,
+    ]
+  };
+
+  function getRot(amount){
+    if(!state.milestoneRot) state.milestoneRot = {};
+    if(!state.milestoneRot[amount]) state.milestoneRot[amount] = { rewardIdx: 0, msgIdx: 0 };
+    return state.milestoneRot[amount];
+  }
+  function pickReward(m){
+    const rot = getRot(m.amount);
+    const reward = m.rewards[rot.rewardIdx % m.rewards.length];
+    rot.rewardIdx++;
+    saveState();
+    return reward;
+  }
+  function pickMessage(amount, reward){
+    const pool = MESSAGE_POOLS[state.mode] || MESSAGE_POOLS.slay;
+    const rot = getRot(amount);
+    const fn = pool[rot.msgIdx % pool.length];
+    rot.msgIdx++;
+    saveState();
+    return fn(amount, reward);
+  }
+// Initial UI apply
+function todayKey(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function ensureEarnState(){
+  state.earn = state.earn || { cents: 0, dateKey: todayKey() };
+
+  // If you want it to reset daily, keep this.
+  // If you want it to NEVER reset, tell me and I’ll change it.
+  if(state.earn.dateKey !== todayKey()){
+    state.earn = { cents: 0, dateKey: todayKey() };
+    saveState();
+  }
+  return state.earn;
+}
+function todayKey(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function ensureEarnState(){
+  state.earn = state.earn || { cents: 0, dateKey: todayKey(), endedKey: "" };
+
+  // If new day, reset today's counter
+  if(state.earn.dateKey !== todayKey()){
+    state.earn.cents = 0;
+    state.earn.dateKey = todayKey();
+    // do NOT change endedKey (we want history)
+    saveState();
+  }
+  return state.earn;
+}
+
+  let running=false, startTime=0, elapsedMs=0, rafId=null;
+
+  function tick(now){
+    if(!running) return;
+
+    const rate = Number(rateEl.value)||0;
+    const ratePerMs = rate/3600000;
+    const currentElapsed = elapsedMs + (now - startTime);
+    const earned = currentElapsed * ratePerMs;
+
+    moneyEl.textContent = fmtMoney(earned);
+const e = ensureEarnState();
+e.cents = Math.round(earned * 100);
+saveState();
+
+
+    for(const m of MILESTONES){
+      if(!fired[m.amount] && earned >= m.amount){
+        fired[m.amount] = true;
+        const reward = pickReward(m);
+        const msg = pickMessage(m.amount, reward);
+
+        showMilestone({
+          kicker: "✨ Milestone unlocked ✨",
+          title: `${fmtMoney(m.amount)} earned`,
+          msg,
+          emojis: m.emojis
+        });
+        burstConfetti(m.emojis);
+      }
+    }
+
+    // Optional: stop at shift end (still no time shown)
+    const shiftHrs = Number(shiftEl.value)||0;
+    const shiftMs = shiftHrs * 3600000;
+    if(shiftMs > 0 && currentElapsed >= shiftMs){
+      running=false;
+      elapsedMs = shiftMs;
+
+      showMilestone({
+        kicker: "🫶 Shift complete 🫶",
+        title: "Clocked out",
+        msg: (state.mode==="slay")
+          ? "Clocked out and richer — as you should 👑"
+          : (state.mode==="chill")
+            ? "All done for today. Rest time."
+            : "Done.",
+        emojis: ["👑","✨","🛌"]
+      });
+      burstConfetti(["👑","✨","🛌"]);
+      pauseBtn.textContent = "Pause";
+      return;
+    }
+
+    rafId = requestAnimationFrame(tick);
+  }
+
+  startBtn.onclick=()=>{
+    if(running) return;
+    for(const m of MILESTONES) fired[m.amount]=false;
+
+    running=true;
+    startTime = performance.now();
+    startBtn.disabled=true;
+    pauseBtn.disabled=false;
+    resetBtn.disabled=false;
+
+    showMilestone({
+      kicker:"💖 Let’s go 💖",
+      title:"Money is being made",
+      msg:"No clock. Just vibes. Just money.",
+      emojis:["✨","💸","👑"]
+    });
+
+    rafId = requestAnimationFrame(tick);
+    saveState();
+  };
+
+  pauseBtn.onclick=()=>{
+    if(!running){
+      running=true;
+      startTime = performance.now();
+      pauseBtn.textContent="Pause";
+      rafId = requestAnimationFrame(tick);
+      return;
+    }
+    running=false;
+    elapsedMs += performance.now() - startTime;
+    pauseBtn.textContent="Resume";
+    if(rafId) cancelAnimationFrame(rafId);
+    saveState();
+  };
+
+  resetBtn.onclick=()=>{
+    running=false;
+    elapsedMs=0;
+    startBtn.disabled=false;
+    pauseBtn.disabled=true;
+    resetBtn.disabled=true;
+    pauseBtn.textContent="Pause";
+    moneyEl.textContent = fmtMoney(0);
+    for(const m of MILESTONES) fired[m.amount]=false;
+    if(rafId) cancelAnimationFrame(rafId);
+    saveState();
+  };
+
+const endDayBtn = document.getElementById("endDay");
+
+endDayBtn?.addEventListener("click", ()=>{
+  const e = ensureEarnState();
+
+  if(e.dateKey !== todayKey()){
+    // safety (shouldn't happen because ensureEarnState resets)
+    e.cents = 0;
+    e.dateKey = todayKey();
+  }
+
+  if(e.cents <= 0){
+    showToast("No earnings to end today ✨");
+    return;
+  }
+
+  // Prevent double-splitting the same day
+  if(e.endedKey === e.dateKey){
+    showToast("Today is already ended 💚");
+    return;
+  }
+
+  const dollars = e.cents / 100;
+
+  // Send to budget (auto-split will happen inside budget settings)
+  if(typeof window.GirlMathBudget_addEarning === "function"){
+    window.GirlMathBudget_addEarning(dollars, `End day (${e.dateKey})`);
+  } else {
+    showToast("Budget system not ready yet 😭");
+    return;
+  }
+
+  // Mark ended + reset daily counter
+  e.endedKey = e.dateKey;
+  e.cents = 0;
+
+  // Reset timer session too
+  running = false;
+  rafId = null;
+  elapsedMs = 0;
+  startTime = 0;
+
+  // Update UI immediately
+  moneyEl.textContent = fmtMoney(0);
+
+  saveState();
+  rerender();
+  showToast("Day ended ✨ Split into budget 💸");
+});
+
+  // Drag/resize/rotate helpers
+  function bringToFront(obj){
+    const maxZ = Math.max(0,
+      ...state.items.map(x=>x.z||0),
+      ...state.widgets.map(x=>x.z||0)
+    );
+    obj.z = maxZ + 1;
+  }
+
+  function makeDragBy(handleEl, moveEl, data, ignoreSelectors=[]){
+    let dragging=false, startX=0, startY=0, origX=0, origY=0;
+
+    handleEl.addEventListener("pointerdown",(e)=>{
+      for(const sel of ignoreSelectors){
+        if(e.target.closest(sel)) return;
+      }
+      dragging=true;
+      handleEl.setPointerCapture(e.pointerId);
+      startX=e.clientX; startY=e.clientY;
+      origX=data.x; origY=data.y;
+      bringToFront(data);
+      moveEl.style.zIndex = data.z;
+      saveState();
+    });
+
+    handleEl.addEventListener("pointermove",(e)=>{
+      if(!dragging) return;
+      const dx=e.clientX-startX, dy=e.clientY-startY;
+      data.x = origX + dx;
+      data.y = origY + dy;
+      moveEl.style.left = data.x + "px";
+      moveEl.style.top  = data.y + "px";
+    });
+
+    handleEl.addEventListener("pointerup",()=>{
+      if(!dragging) return;
+      dragging=false;
+      saveState();
+    });
+  }
+
+  function makeResizable(el, data, handle){
+    let resizing=false, startX=0, startY=0, startW=0, startH=0;
+    handle.addEventListener("pointerdown",(e)=>{
+      e.stopPropagation();
+      resizing=true;
+      handle.setPointerCapture(e.pointerId);
+      startX=e.clientX; startY=e.clientY;
+      startW=data.w; startH=data.h;
+      bringToFront(data);
+      el.style.zIndex = data.z;
+      saveState();
+    });
+
+    handle.addEventListener("pointermove",(e)=>{
+      if(!resizing) return;
+      const dx=e.clientX-startX, dy=e.clientY-startY;
+      data.w = Math.max(170, startW + dx);
+      data.h = Math.max(150, startH + dy);
+      el.style.width = data.w + "px";
+      el.style.height = data.h + "px";
+    });
+
+    handle.addEventListener("pointerup",()=>{
+      if(!resizing) return;
+      resizing=false;
+      saveState();
+    });
+  }
+
+  function makeRotatable(el, data, handle){
+    let rotating=false;
+    handle.addEventListener("pointerdown",(e)=>{
+      e.stopPropagation();
+      rotating=true;
+      handle.setPointerCapture(e.pointerId);
+      bringToFront(data);
+      el.style.zIndex = data.z;
+      saveState();
+    });
+
+    handle.addEventListener("pointermove",(e)=>{
+      if(!rotating) return;
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width/2;
+      const cy = rect.top + rect.height/2;
+      const angle = Math.atan2(e.clientY - cy, e.clientX - cx) * (180/Math.PI);
+      data.rot = Math.round(angle);
+      el.style.transform = `rotate(${data.rot}deg)`;
+    });
+
+    handle.addEventListener("pointerup",()=>{
+      if(!rotating) return;
+      rotating=false;
+      saveState();
+    });
+  }
+
+  function isHeic(file){
+    const name = (file?.name || "").toLowerCase();
+    const type = (file?.type || "").toLowerCase();
+    return type.includes("heic") || type.includes("heif") || name.endsWith(".heic") || name.endsWith(".heif");
+  }
+
+  // Photos (objectURL method that worked for you)
+  // Photos (persistent DataURL method)
+function addFilesAsPhotos(files){
+  const list = Array.from(files || []).filter(f => f && (f.type || "").startsWith("image/"));
+  if(!list.length){ showToast("No images selected 🖼️"); return; }
+
+  const heicPicked = list.some(isHeic);
+  if(heicPicked){
+    showToast("HEIC file spotted 🫶 Use JPG/PNG for best results ✨");
+  }
+
+  // Optional safety limit so storage doesn't explode
+  const MAX_MB = 3;
+  const MAX_BYTES = MAX_MB * 1024 * 1024;
+
+  let added = 0;
+  let skippedBig = 0;
+
+  for(const f of list){
+    if(isHeic(f)) continue;
+
+    if(f.size > MAX_BYTES){
+      skippedBig++;
+      continue;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result; // ✅ persists across refresh
+
+      state.items.push({
+        id: uid(),
+        src: dataUrl,
+        isObjectURL: false, // important: it's not a blob anymore
+        x: 40 + Math.random()*260,
+        y: 130 + Math.random()*220,
+        w: 220, h: 220,
+        rot: Math.round((Math.random()*10)-5),
+        z: 1
+      });
+
+      added++;
+      saveState();
+      rerender();
+      showToast(`Added ${added} pic${added===1?"":"s"} ✨`);
+    };
+
+    reader.onerror = () => {
+      showToast("Couldn’t read that image 😭");
+    };
+
+    reader.readAsDataURL(f);
+  }
+
+  if(skippedBig > 0){
+    showToast(`Skipped ${skippedBig} image${skippedBig===1?"":"s"} over ${MAX_MB}MB ✨`);
+  }
+}
+
+
+  addPicsBtn.addEventListener("click", ()=>{
+    showToast("Pick a photo…");
+    uploadEl.click();
+  });
+  uploadEl.addEventListener("change", ()=>{
+    addFilesAsPhotos(uploadEl.files);
+    uploadEl.value = "";
+  });
+
+  // Drag & drop
+  window.addEventListener("dragover", (e)=>{ e.preventDefault(); });
+  window.addEventListener("drop", (e)=>{
+    e.preventDefault();
+    if(e.dataTransfer && e.dataTransfer.files){
+      addFilesAsPhotos(e.dataTransfer.files);
+    }
+  });
+
+  function renderImage(it){
+    const el = document.createElement("div");
+    el.className = "item";
+    el.style.left = it.x+"px";
+    el.style.top  = it.y+"px";
+    el.style.width  = it.w+"px";
+    el.style.height = it.h+"px";
+    el.style.zIndex = it.z || 1;
+    el.style.transform = `rotate(${it.rot||0}deg)`;
+
+    const frame = document.createElement("div");
+    frame.className="frame";
+
+    const img = document.createElement("img");
+    img.src = it.src;
+    img.onerror = ()=>{ showToast("That image can’t display here 🫶 Try JPG/PNG ✨"); };
+
+    const del = document.createElement("div");
+    del.className="xbtn";
+    del.textContent="✕";
+    del.title="Delete photo";
+    del.addEventListener("pointerdown",(e)=>e.stopPropagation());
+    del.onclick=()=>{
+      if(it.isObjectURL && it.src){
+        try{ URL.revokeObjectURL(it.src); }catch(e){}
+      }
+      state.items = state.items.filter(x=>x.id!==it.id);
+      saveState(); rerender();
+    };
+
+    const hResize = document.createElement("div");
+    hResize.className="handle resize";
+    const hRotate = document.createElement("div");
+    hRotate.className="handle rotate";
+
+    frame.appendChild(img);
+    frame.appendChild(del);
+    frame.appendChild(hResize);
+    frame.appendChild(hRotate);
+    el.appendChild(frame);
+
+    makeDragBy(frame, el, it, [".handle", ".xbtn"]);
+    makeResizable(el, it, hResize);
+    makeRotatable(el, it, hRotate);
+
+    return el;
+  }
+
+  // Widgets
+  function daysBetween(today, target){
+    const a = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const b = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+    return Math.round((b - a) / 86400000);
+  }
+
+  function widgetShell(w, titleText){
+    const el = document.createElement("div");
+    el.className="item widget";
+    el.style.left = w.x+"px";
+    el.style.top  = w.y+"px";
+    el.style.width = w.w+"px";
+    el.style.height = w.h+"px";
+    el.style.zIndex = w.z || 1;
+    el.style.transform = `rotate(${w.rot||0}deg)`;
+
+    const head = document.createElement("div");
+    head.className="whead";
+
+    const title = document.createElement("div");
+    title.className="wtitle";
+    title.textContent = titleText;
+
+    const btns = document.createElement("div");
+
+    const del = document.createElement("button");
+    del.className="wbtn";
+    del.textContent="✕";
+    del.title="Remove widget";
+    del.type="button";
+    del.addEventListener("pointerdown",(e)=>e.stopPropagation());
+    del.onclick=(e)=>{
+      e.stopPropagation();
+      state.widgets = state.widgets.filter(x=>x.id!==w.id);
+      saveState(); rerender();
+    };
+
+    btns.appendChild(del);
+    head.appendChild(title);
+    head.appendChild(btns);
+
+    const body = document.createElement("div");
+    body.className="wbody";
+
+    const hResize = document.createElement("div");
+    hResize.className="handle resize";
+    const hRotate = document.createElement("div");
+    hRotate.className="handle rotate";
+
+    el.appendChild(head);
+    el.appendChild(body);
+    el.appendChild(hResize);
+    el.appendChild(hRotate);
+
+    makeDragBy(head, el, w, ["button"]);
+    makeResizable(el, w, hResize);
+    makeRotatable(el, w, hRotate);
+
+    return {el, body};
+  }
+
+  function renderTodo(w){
+    const {el, body} = widgetShell(w, "To-Do");
+
+    const addrow = document.createElement("div");
+    addrow.style.display="flex";
+    addrow.style.gap="8px";
+    addrow.style.marginBottom="10px";
+
+    const input = document.createElement("input");
+    input.className="winput";
+    input.type="text";
+    input.placeholder="Add a task…";
+
+    const add = document.createElement("button");
+    add.className="secondary";
+    add.textContent="Add";
+    add.type="button";
+
+    function addTask(){
+      const txt = input.value.trim();
+      if(!txt) return;
+      w.data.todos.unshift({ id: uid(), txt, done:false });
+      input.value="";
+      saveState(); rerender();
+    }
+
+    add.onclick=addTask;
+    input.addEventListener("keydown",(e)=>{ if(e.key==="Enter") addTask(); });
+
+    addrow.appendChild(input);
+    addrow.appendChild(add);
+
+    const list = document.createElement("div");
+    list.className="list";
+
+    for(const t of w.data.todos){
+      const row = document.createElement("div");
+      row.className="todo" + (t.done ? " done":"");
+
+      const cb = document.createElement("input");
+      cb.type="checkbox";
+      cb.checked = !!t.done;
+      cb.onchange=()=>{ t.done = cb.checked; saveState(); rerender(); };
+
+      const txt = document.createElement("div");
+      txt.className="txt";
+      txt.textContent=t.txt;
+
+      const rm = document.createElement("button");
+      rm.className="wbtn";
+      rm.textContent="–";
+      rm.type="button";
+      rm.title="Remove";
+      rm.addEventListener("pointerdown",(e)=>e.stopPropagation());
+      rm.onclick=(e)=>{
+        e.stopPropagation();
+        w.data.todos = w.data.todos.filter(x=>x.id!==t.id);
+        saveState(); rerender();
+      };
+
+      row.appendChild(cb); row.appendChild(txt); row.appendChild(rm);
+      list.appendChild(row);
+    }
+
+    body.appendChild(addrow);
+    body.appendChild(list);
+    return el;
+  }
+
+  function renderNotes(w){
+    const {el, body} = widgetShell(w, "Notes");
+    const ta = document.createElement("textarea");
+    ta.placeholder="Dump thoughts, reminders, anything…";
+    ta.value = w.data.text || "";
+    ta.addEventListener("input", ()=>{
+      w.data.text = ta.value;
+      saveState();
+    });
+    body.appendChild(ta);
+    return el;
+  }
+
+  function renderCountdown(w){
+    const {el, body} = widgetShell(w, "Countdown");
+
+    const title = document.createElement("input");
+    title.className="winput";
+    title.type="text";
+    title.placeholder="Trip to Hawaii ✨";
+    title.value = w.data.title || "Trip to Hawaii";
+    title.addEventListener("input", ()=>{ w.data.title = title.value; saveState(); rerender(); });
+
+    const date = document.createElement("input");
+    date.className="winput";
+    date.type="date";
+    date.value = w.data.date || "";
+
+    const info = document.createElement("div");
+    info.style.marginTop="10px";
+    info.style.fontWeight="1000";
+    info.style.color = "var(--muted)";
+
+    function update(){
+      w.data.date = date.value;
+      saveState();
+      if(!date.value){
+        info.textContent = "Pick a date to start the hype ✨";
+        return;
+      }
+      const d = new Date(date.value+"T00:00:00");
+      const n = daysBetween(new Date(), d);
+      info.textContent = (n >= 0) ? `${w.data.title || "Countdown"}: ${n} days left` : `${Math.abs(n)} days ago`;
+    }
+    date.addEventListener("change", update);
+    update();
+
+    body.appendChild(title);
+    body.appendChild(date);
+    body.appendChild(info);
+    return el;
+  }
+
+  function renderPayday(w){
+    const {el, body} = widgetShell(w, "Payday");
+
+    const date = document.createElement("input");
+    date.className="winput";
+    date.type="date";
+    date.value = w.data.next || "";
+
+    const info = document.createElement("div");
+    info.style.marginTop="10px";
+    info.style.fontWeight="1000";
+    info.style.color = "var(--muted)";
+
+    function update(){
+      w.data.next = date.value;
+      saveState();
+      if(!date.value){
+        info.textContent = "Set your next payday date 💸";
+        return;
+      }
+      const d = new Date(date.value+"T00:00:00");
+      const n = daysBetween(new Date(), d);
+      info.textContent = (n >= 0) ? `${n} days until payday` : `Payday passed (${Math.abs(n)} days ago)`;
+    }
+    date.addEventListener("change", update);
+    update();
+
+    body.appendChild(date);
+    body.appendChild(info);
+    return el;
+  }
+
+function ensureBudgetState(){
+  state.budget = state.budget || {
+    settings: {
+      autoSplit: true,
+      pct: { bills: 60, savings: 20, fun: 20, unassigned: 0 }
+    },
+    balances: { bills: 0, savings: 0, fun: 0, unassigned: 0 },
+    log: [],
+    lastAllocation: null
+  };
+  return state.budget;
+}
+
+function moneyFmt(n){
+  return new Intl.NumberFormat(undefined,{style:"currency",currency:"USD"}).format(Number(n||0));
+}
+function nowStamp(){ return new Date().toLocaleString(); }
+function clampPct(v){
+  const n = Math.round(Number(v||0));
+  if(Number.isNaN(n)) return 0;
+  return Math.max(0, Math.min(100, n));
+}
+function pctTotal(p){
+  return (p.bills||0)+(p.savings||0)+(p.fun||0)+(p.unassigned||0);
+}
+function normalizePct(p){
+  const t = pctTotal(p);
+  if(t < 100 && (p.unassigned||0) === 0){
+    p.unassigned = 100 - ((p.bills||0)+(p.savings||0)+(p.fun||0));
+  }
+  return p;
+}
+function pushBudgetLog(entry){
+  const b = ensureBudgetState();
+  b.log.unshift(entry);
+  b.log = b.log.slice(0, 150);
+}
+
+function addBudget(category, amount, note, type){
+  const b = ensureBudgetState();
+  const amt = Math.max(0, Number(amount||0));
+  if(!amt) return;
+
+  b.balances[category] = (b.balances[category]||0) + (type==="spend" ? -amt : amt);
+
+  pushBudgetLog({
+    ts: nowStamp(),
+    type,
+    category,
+    amount: amt,
+    note: (note||"").trim()
+  });
+
+  saveState();
+}
+
+function autoSplitEarning(amount, note){
+  const b = ensureBudgetState();
+  const amt = Math.max(0, Number(amount||0));
+  if(!amt) return;
+
+  const pct = normalizePct({ ...b.settings.pct });
+  const total = pctTotal(pct);
+
+  if(total !== 100){
+    pushBudgetLog({
+      ts: nowStamp(),
+      type: "info",
+      category: "system",
+      amount: 0,
+      note: "Auto-split is ON but percentages are not 100%. Fix in ⚙️ Settings."
+    });
+    saveState();
+    return;
+  }
+
+  const split = {
+    bills: +(amt*(pct.bills/100)).toFixed(2),
+    savings: +(amt*(pct.savings/100)).toFixed(2),
+    fun: +(amt*(pct.fun/100)).toFixed(2),
+    unassigned: +(amt*(pct.unassigned/100)).toFixed(2),
+  };
+
+  const sum = split.bills+split.savings+split.fun+split.unassigned;
+  const diff = +(amt - sum).toFixed(2);
+  if(diff !== 0) split.unassigned = +(split.unassigned + diff).toFixed(2);
+
+  addBudget("bills", split.bills, note ? `Auto: ${note}` : "Auto allocation", "add");
+  addBudget("savings", split.savings, note ? `Auto: ${note}` : "Auto allocation", "add");
+  addBudget("fun", split.fun, note ? `Auto: ${note}` : "Auto allocation", "add");
+  if(split.unassigned) addBudget("unassigned", split.unassigned, note ? `Auto: ${note}` : "Auto allocation", "add");
+
+  b.lastAllocation = { ts: nowStamp(), amount: amt, split };
+  saveState();
+}
+
+// Hook for your existing earnings system (optional later)
+window.GirlMathBudget_addEarning = function(amount, note="Earnings"){
+  const b = ensureBudgetState();
+  if(b.settings.autoSplit) autoSplitEarning(amount, note);
+  else addBudget("unassigned", amount, note, "add");
+};
+
+function renderBudget(w){
+  const b = ensureBudgetState();
+  w.data = w.data || {};
+
+  const {el, body} = widgetShell(w, "Girl Math Budget");
+
+  // --- Settings (hidden)
+  const settingsBtn = document.createElement("button");
+  settingsBtn.className = "wbtn";
+  settingsBtn.textContent = "⚙️ Settings";
+
+  const settings = document.createElement("div");
+  settings.className = "budgetSettings";
+  settings.style.display = "none";
+
+  const autoRow = document.createElement("label");
+  autoRow.className = "budgetRow";
+  autoRow.innerHTML = `<input type="checkbox" ${b.settings.autoSplit ? "checked" : ""} /> Auto-split earnings into buckets`;
+  const autoChk = autoRow.querySelector("input");
+
+  const grid = document.createElement("div");
+  grid.className = "budgetGrid";
+  grid.innerHTML = `
+    <label>Adulting %<input type="number" min="0" max="100" step="1" value="${b.settings.pct.bills||0}"></label>
+    <label>Future Me %<input type="number" min="0" max="100" step="1" value="${b.settings.pct.savings||0}"></label>
+    <label>Fun Money %<input type="number" min="0" max="100" step="1" value="${b.settings.pct.fun||0}"></label>
+    <label>Unassigned %<input type="number" min="0" max="100" step="1" value="${b.settings.pct.unassigned||0}"></label>
+  `;
+  const [billsIn, savIn, funIn, unIn] = grid.querySelectorAll("input");
+
+  const hint = document.createElement("div");
+  hint.className = "budgetHint";
+
+  function updateHint(){
+    const p = normalizePct({
+      bills: clampPct(billsIn.value),
+      savings: clampPct(savIn.value),
+      fun: clampPct(funIn.value),
+      unassigned: clampPct(unIn.value)
+    });
+    const t = pctTotal(p);
+    if(t === 100) hint.textContent = "Percentages total 100%. Auto-split ready ✨";
+    else if(t < 100) hint.textContent = `Totals ${t}%. Remaining ${100-t}% will go to Unassigned.`;
+    else hint.textContent = `Totals ${t}% (over 100%). Reduce to 100% for auto-split.`;
+  }
+  [billsIn, savIn, funIn, unIn].forEach(inp => inp.addEventListener("input", updateHint));
+  updateHint();
+
+  const btnRow = document.createElement("div");
+  btnRow.className = "budgetBtnRow";
+
+  const saveBtn = document.createElement("button");
+  saveBtn.className = "wbtn";
+  saveBtn.textContent = "Save";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "wbtn wbtnGhost";
+  closeBtn.textContent = "Close";
+
+  const resetBalBtn = document.createElement("button");
+  resetBalBtn.className = "wbtn wbtnDanger";
+  resetBalBtn.textContent = "Reset balances";
+
+  const clearLogBtn = document.createElement("button");
+  clearLogBtn.className = "wbtn wbtnDanger";
+  clearLogBtn.textContent = "Clear log";
+
+  btnRow.append(saveBtn, closeBtn, resetBalBtn, clearLogBtn);
+
+  const privacy = document.createElement("div");
+  privacy.className = "budgetPrivacy";
+  privacy.textContent = "Saved only on your device 💚";
+
+  settings.append(autoRow, grid, hint, btnRow, privacy);
+
+  settingsBtn.addEventListener("click", ()=>{
+    settings.style.display = (settings.style.display==="none") ? "block" : "none";
+    updateHint();
+  });
+
+  closeBtn.addEventListener("click", ()=>{
+    settings.style.display = "none";
+  });
+
+  saveBtn.addEventListener("click", ()=>{
+    b.settings.autoSplit = !!autoChk.checked;
+    b.settings.pct = normalizePct({
+      bills: clampPct(billsIn.value),
+      savings: clampPct(savIn.value),
+      fun: clampPct(funIn.value),
+      unassigned: clampPct(unIn.value)
+    });
+    pushBudgetLog({ ts: nowStamp(), type:"info", category:"system", amount:0, note:"Settings updated." });
+    saveState();
+    refresh();
+    settings.style.display = "none";
+  });
+
+  resetBalBtn.addEventListener("click", ()=>{
+    if(!confirm("Reset all bucket balances to $0?")) return;
+    b.balances = { bills:0, savings:0, fun:0, unassigned:0 };
+    pushBudgetLog({ ts: nowStamp(), type:"info", category:"system", amount:0, note:"Balances reset." });
+    saveState();
+    refresh();
+  });
+
+  clearLogBtn.addEventListener("click", ()=>{
+    if(!confirm("Clear the activity log?")) return;
+    b.log = [];
+    pushBudgetLog({ ts: nowStamp(), type:"info", category:"system", amount:0, note:"Activity log cleared." });
+    saveState();
+    refresh();
+  });
+
+  // --- Tabs + balances
+  const tabs = document.createElement("div");
+  tabs.className = "budgetTabs";
+  tabs.innerHTML = `
+    <button class="budgetTab active" data-tab="bills">Adulting</button>
+    <button class="budgetTab" data-tab="savings">Future Me</button>
+    <button class="budgetTab" data-tab="fun">Fun Money</button>
+    <button class="budgetTab" data-tab="unassigned">Unassigned</button>
+  `;
+
+  const summary = document.createElement("div");
+  summary.className = "budgetSummary";
+  summary.innerHTML = `
+    <div><div class="budgetLbl">Adulting</div><div class="budgetVal" data-bal="bills"></div></div>
+    <div><div class="budgetLbl">Future Me</div><div class="budgetVal" data-bal="savings"></div></div>
+    <div><div class="budgetLbl">Fun</div><div class="budgetVal" data-bal="fun"></div></div>
+    <div><div class="budgetLbl">Unassigned</div><div class="budgetVal" data-bal="unassigned"></div></div>
+  `;
+
+  // --- Actions
+  const actions = document.createElement("div");
+  actions.className = "budgetActions";
+  actions.innerHTML = `
+    <select class="winput" data-cat>
+      <option value="bills">Adulting</option>
+      <option value="savings">Future Me</option>
+      <option value="fun">Fun Money</option>
+      <option value="unassigned">Unassigned</option>
+    </select>
+    <input class="winput" type="number" step="0.01" min="0" placeholder="Amount" data-amt>
+    <input class="winput" type="text" maxlength="60" placeholder="Note (optional)" data-note>
+    <button class="wbtn" data-act="add">Add</button>
+    <button class="wbtn wbtnGhost" data-act="spend">Spend</button>
+  `;
+
+  const catSel = actions.querySelector("[data-cat]");
+  const amtIn = actions.querySelector("[data-amt]");
+  const noteIn = actions.querySelector("[data-note]");
+
+  // sync tab -> dropdown
+  tabs.querySelectorAll(".budgetTab").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      tabs.querySelectorAll(".budgetTab").forEach(bn=>bn.classList.remove("active"));
+      btn.classList.add("active");
+      catSel.value = btn.dataset.tab;
+    });
+  });
+
+  function doTxn(type){
+    addBudget(catSel.value, amtIn.value, noteIn.value || (type==="spend" ? "Expense" : "Manual add"), type);
+    amtIn.value = "";
+    noteIn.value = "";
+    refresh();
+  }
+
+  actions.querySelector('[data-act="add"]').addEventListener("click", ()=>doTxn("add"));
+  actions.querySelector('[data-act="spend"]').addEventListener("click", ()=>doTxn("spend"));
+
+  // --- Log
+  const logWrap = document.createElement("div");
+  logWrap.className = "budgetLogWrap";
+
+  const logHead = document.createElement("div");
+  logHead.className = "budgetLogHead";
+  const last = document.createElement("div");
+  last.className = "budgetLbl";
+  logHead.innerHTML = `<div class="budgetLbl">Activity</div>`;
+  logHead.appendChild(last);
+
+  const log = document.createElement("div");
+  log.className = "budgetLog";
+
+  logWrap.append(logHead, log);
+
+  function refresh(){
+    summary.querySelector('[data-bal="bills"]').textContent = moneyFmt(b.balances.bills);
+    summary.querySelector('[data-bal="savings"]').textContent = moneyFmt(b.balances.savings);
+    summary.querySelector('[data-bal="fun"]').textContent = moneyFmt(b.balances.fun);
+    summary.querySelector('[data-bal="unassigned"]').textContent = moneyFmt(b.balances.unassigned);
+
+    last.textContent = b.lastAllocation ? `Last auto-split: ${moneyFmt(b.lastAllocation.amount)}` : "";
+
+    log.innerHTML = "";
+    b.log.slice(0, 60).forEach(e=>{
+      const row = document.createElement("div");
+      const cat =
+        e.category==="bills" ? "Adulting" :
+        e.category==="savings" ? "Future Me" :
+        e.category==="fun" ? "Fun Money" :
+        e.category==="unassigned" ? "Unassigned" : "System";
+      const sign = e.type==="spend" ? "−" : e.type==="add" ? "+" : "•";
+      const amt = e.amount ? `${sign} ${moneyFmt(e.amount)}` : "";
+      row.textContent = `[${e.ts}] ${cat} ${amt}${e.note ? " — "+e.note : ""}`;
+      log.appendChild(row);
+    });
+
+    updateHint();
+  }
+
+  refresh();
+
+  body.appendChild(settingsBtn);
+  body.appendChild(settings);
+  body.appendChild(tabs);
+  body.appendChild(summary);
+  body.appendChild(actions);
+  body.appendChild(logWrap);
+
+  return el;
+}
+ 
+ addWidgetBtn.addEventListener("click", ()=>{
+    const type = widgetSel.value;
+
+    const base = {
+      id: uid(),
+      type,
+      x: 22 + Math.random()*220,
+      y: 120 + Math.random()*170,
+      w: 380,
+      h: 320,
+      rot: 0,
+      z: 1,
+      data: {}
+    };
+
+    if(type==="todo"){
+      base.data.todos = [
+        { id: uid(), txt:"drink water", done:false },
+        { id: uid(), txt:"2-minute stretch", done:false }
+      ];
+      base.h = 440;
+    }
+    if(type==="notes"){
+      base.data.text = "";
+      base.h = 360;
+    }
+    if(type==="countdown"){
+      base.data.title = "Trip to Hawaii";
+      base.data.date = "";
+      base.h = 300;
+    }
+    if(type==="payday"){
+      base.data.next = "";
+      base.h = 260;
+    }
+if(type==="budget"){
+  base.data = {};
+  base.w = 560;
+  base.h = 360;
+}
+    state.widgets.push(base);
+    saveState();
+    rerender();
+    showToast("Widget added ✨");
+  });
+
+  // Save / Load layout (JSON)
+  function downloadJSON(filename, obj){
+    const blob = new Blob([JSON.stringify(obj, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 500);
+  }
+
+  saveLayoutBtn.addEventListener("click", ()=>{
+    // We cannot reliably persist objectURLs across sessions, so we export layout structure + widgets + settings.
+    // Photos will export as "placeholders" if they are objectURLs.
+    const exportObj = {
+      version: state.version,
+      mode: state.mode,
+      pack: state.pack,
+      rate: Number(rateEl.value)||0,
+      shift: Number(shiftEl.value)||0,
+      dim: Number(brightEl.value)/100,
+      items: state.items.map(it => ({
+        ...it,
+        // if it was an objectURL, keep it but mark it clearly:
+        src: it.isObjectURL ? "" : it.src,
+        note: it.isObjectURL ? "Photo was local. Re-add this photo after loading." : undefined
+      })),
+      widgets: state.widgets,
+      milestoneRot: state.milestoneRot || {}
+    };
+    downloadJSON("girl-math-layout.json", exportObj);
+    showToast("Layout saved ✨");
+  });
+
+  loadLayoutBtn.addEventListener("click", ()=>{
+    loadInput.click();
+  });
+
+  loadInput.addEventListener("change", async ()=>{
+    const file = loadInput.files && loadInput.files[0];
+    loadInput.value = "";
+    if(!file) return;
+
+    try{
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      // Basic sanity
+      state.mode = data.mode || "slay";
+      state.pack = data.pack || "pinkCherry";
+      state.rate = Number(data.rate ?? 17);
+      state.shift = Number(data.shift ?? 8);
+      state.dim = Number(data.dim ?? 0.90);
+
+      // Restore layout objects
+      state.items = Array.isArray(data.items) ? data.items.map(x=>({
+        id: x.id || uid(),
+        src: x.src || "", // if empty, it becomes a placeholder (user re-adds photo)
+        isObjectURL: false,
+        x: Number(x.x ?? 40),
+        y: Number(x.y ?? 140),
+        w: Number(x.w ?? 220),
+        h: Number(x.h ?? 220),
+        rot: Number(x.rot ?? 0),
+        z: Number(x.z ?? 1),
+        note: x.note
+      })) : [];
+
+      state.widgets = Array.isArray(data.widgets) ? data.widgets.map(w=>({
+        id: w.id || uid(),
+        type: w.type || "notes",
+        x: Number(w.x ?? 40),
+        y: Number(w.y ?? 140),
+        w: Number(w.w ?? 380),
+        h: Number(w.h ?? 320),
+        rot: Number(w.rot ?? 0),
+        z: Number(w.z ?? 1),
+        data: w.data || {}
+      })) : [];
+
+      state.milestoneRot = data.milestoneRot || {};
+
+      // Apply UI settings
+      rateEl.value = (state.rate ?? 17).toFixed(2);
+      shiftEl.value = (state.shift ?? 8);
+      brightEl.value = Math.round((state.dim ?? 0.90)*100);
+      document.documentElement.style.setProperty("--dim", String(state.dim ?? 0.90));
+      packSel.value = state.pack || "pinkCherry";
+      setMode(state.mode || "slay");
+      applyPack(state.pack || "pinkCherry"); // rerender inside
+ensureEarnState();
+const rateNow = Number(rateEl.value) || 0;
+if(rateNow > 0){
+  const earnedDollars = state.earn.cents / 100;
+  elapsedMs = earnedDollars * (3600000 / rateNow);
+}
+      saveState();
+      showToast("Layout loaded ✨ (re-add any local photos)");
+    }catch(e){
+      showToast("That file couldn’t be loaded 🫶");
+    }
+  });
+
+  // Rendering
+  function rerender(){
+    board.innerHTML = "";
+
+    // If an item has empty src (because it was a local photo from another session),
+    // we render a cute placeholder so it doesn't disappear.
+    for(const it of state.items){
+      if(!it.src){
+        const el = document.createElement("div");
+        el.className = "item";
+        el.style.left = it.x+"px";
+        el.style.top  = it.y+"px";
+        el.style.width  = it.w+"px";
+        el.style.height = it.h+"px";
+        el.style.zIndex = it.z || 1;
+        el.style.transform = `rotate(${it.rot||0}deg)`;
+
+        const frame = document.createElement("div");
+        frame.className="frame";
+        frame.style.display="flex";
+        frame.style.alignItems="center";
+        frame.style.justifyContent="center";
+        frame.style.padding="16px";
+        frame.style.color="var(--muted)";
+        frame.style.fontWeight="1000";
+        frame.style.textAlign="center";
+        frame.textContent = "Photo placeholder ✨\nRe-add this pic";
+
+        const del = document.createElement("div");
+        del.className="xbtn";
+        del.textContent="✕";
+        del.title="Delete placeholder";
+        del.addEventListener("pointerdown",(e)=>e.stopPropagation());
+        del.onclick=()=>{
+          state.items = state.items.filter(x=>x.id!==it.id);
+          saveState(); rerender();
+        };
+
+        const hResize = document.createElement("div");
+        hResize.className="handle resize";
+        const hRotate = document.createElement("div");
+        hRotate.className="handle rotate";
+
+        frame.appendChild(del);
+        frame.appendChild(hResize);
+        frame.appendChild(hRotate);
+        el.appendChild(frame);
+
+        makeDragBy(frame, el, it, [".handle", ".xbtn"]);
+        makeResizable(el, it, hResize);
+        makeRotatable(el, it, hRotate);
+
+        board.appendChild(el);
+      } else {
+        board.appendChild(renderImage(it));
+      }
+    }
+
+    for(const w of state.widgets){
+      let el;
+      if(w.type==="todo") el = renderTodo(w);
+      if(w.type==="notes") el = renderNotes(w);
+      if(w.type==="countdown") el = renderCountdown(w);
+      if(w.type==="payday") el = renderPayday(w);
+      if(w.type==="budget") el = renderBudget(w);
+      if(el) board.appendChild(el);
+    }
+  }
+
+  // Initial UI apply
+  rateEl.value = (state.rate ?? 17).toFixed(2);
+  shiftEl.value = (state.shift ?? 8);
+  brightEl.value = Math.round((state.dim ?? 0.90)*100);
+  document.documentElement.style.setProperty("--dim", String(state.dim ?? 0.90));
+
+  packSel.value = state.pack || "pinkCherry";
+  setMode(state.mode || "slay");
+  applyPack(state.pack || "pinkCherry");
+ensureEarnState();
+const rateNow = Number(rateEl.value) || 0;
+if(rateNow > 0){
+  const earnedDollars = (state.earn?.cents || 0) / 100;
+  elapsedMs = earnedDollars * (3600000 / rateNow);
+}
+moneyEl.textContent = fmtMoney((state.earn?.cents || 0) / 100);
+packSel.addEventListener("change", ()=>applyPack(packSel.value));
+  rateEl.addEventListener("change", saveState);
+  shiftEl.addEventListener("change", saveState);
+
+  rerender();
+  showToast("Loaded ✨");
+
+})();
+</script>
+</body>
+</html>
